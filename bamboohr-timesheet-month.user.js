@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Month
 // @namespace    bamboohr.sconde.net
-// @version      0.1
-// @description  Fill BambooHR Timesheet whole month with templates
+// @version      0.2
+// @description  Fill BambooHR Timesheet month with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/employees/timesheet/?id=*
 // @grant        GM.getValue
