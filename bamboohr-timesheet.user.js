@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Day
 // @namespace    bamboohr.sconde.net
-// @version      0.6
+// @version      0.7
 // @description  Fill BambooHR Timesheet day with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/employees/timesheet/?id=*
@@ -33,7 +33,12 @@ const DEFAULT_TEMPLATES = {
   }
 
   for (const template of Object.keys(TEMPLATES).reverse()) {
+    let span = document.createElement('span');
+    document.querySelector('.TimesheetSummary').prepend(span);
+
     let btn = document.createElement('button');
+    span.append(btn);
+
     btn.type = 'button';
     btn.classList.value = 'btn btnLarge btnAction TimesheetSummary__clockButton';
     btn.innerText = `Fill Day: ${template}`;
@@ -86,7 +91,5 @@ const DEFAULT_TEMPLATES = {
 
       return false;
     };
-
-    document.querySelector('.TimesheetSummary').prepend(btn);
   }
 })();
