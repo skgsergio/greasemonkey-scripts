@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill
 // @namespace    bamboohr.sconde.net
-// @version      0.3
+// @version      0.4
 // @description  Fill BambooHR Timesheet with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/*
 // @grant        GM.getValue
 // @grant        GM.setValue
+// @homepageURL  https://github.com/skgsergio/bamboohr-timesheet-greasemonkey/
+// @supportURL   https://github.com/skgsergio/bamboohr-timesheet-greasemonkey/issues
 // @updateURL    https://raw.githubusercontent.com/skgsergio/bamboohr-timesheet-greasemonkey/master/bamboohr-timesheet.user.js
 // ==/UserScript==
 
@@ -22,12 +24,6 @@ const DEFAULT_TEMPLATES = {
   'Fri': [{ start: '8:30', end: '14:30' }, { start: '15:30', end: '17:30' }]
 };
 
-function htmlToElement(html) {
-  let template = document.createElement('template');
-  template.innerHTML = html.trim();
-  return template.content.firstChild;
-}
-
 (async function() {
   let TEMPLATES = await GM.getValue('TEMPLATES');
 
@@ -37,7 +33,8 @@ function htmlToElement(html) {
   }
 
   for (const template of Object.keys(TEMPLATES)) {
-    let link = htmlToElement(`<li><a href="#" data-template="${template}">Fill Timesheet: ${template}</a></li>`);
+    let link = document.createElement('li');
+    link.innerHTML = `<a href="#" data-template="${template}">Fill Timesheet: ${template}</a>`;
 
     link.querySelector('a').onclick = function () {
       let now = new Date();
@@ -54,7 +51,7 @@ function htmlToElement(html) {
         entries.push({
           id: null,
           trackingId: idx + 1,
-          employeeId: window.SESSION_USER.employeeId,
+          employeeId: SESSION_USER.employeeId,
           date: date,
           start: slot.start,
           end: slot.end,
@@ -72,7 +69,7 @@ function htmlToElement(html) {
           referrer: 'client',
           headers: {
             'content-type': 'application/json; charset=UTF-8',
-            'x-csrf-token': window.CSRF_TOKEN
+            'x-csrf-token': CSRF_TOKEN
           },
           body: JSON.stringify({ entries: entries })
         }
