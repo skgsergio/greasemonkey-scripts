@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Month
 // @namespace    bamboohr.sconde.net
-// @version      0.2
+// @version      0.3
 // @description  Fill BambooHR Timesheet month with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/employees/timesheet/?id=*
@@ -33,12 +33,17 @@ const DEFAULT_TEMPLATES = {
     GM.setValue('TEMPLATES', TEMPLATES);
   }
 
+  let span = document.createElement('span');
+  document.querySelector('.TimesheetSummary').prepend(span);
+
   let btn = document.createElement('button');
+  span.append(btn);
+
   btn.type = 'button';
   btn.classList.value = 'btn btnLarge btnAction TimesheetSummary__clockButton';
   btn.innerText = 'Fill Month';
 
-  btn.querySelector.onclick = function () {
+  btn.onclick = function () {
     let work_days = document.querySelectorAll('.TimesheetSlat:not(.js-timesheet-showWeekends)');
     let skipped = [];
     let entries = [];
@@ -105,6 +110,4 @@ const DEFAULT_TEMPLATES = {
 
     return false;
   }
-
-  document.querySelector('.TimesheetSummary').prepend(btn);
 })();
