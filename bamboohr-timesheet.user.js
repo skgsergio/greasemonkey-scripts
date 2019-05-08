@@ -1,10 +1,10 @@
 // ==UserScript==
-// @name         BambooHR Timesheet Fill
+// @name         BambooHR Timesheet Fill Day
 // @namespace    bamboohr.sconde.net
-// @version      0.5
-// @description  Fill BambooHR Timesheet with templates
+// @version      0.6
+// @description  Fill BambooHR Timesheet day with templates
 // @author       Sergio Conde
-// @match        https://*.bamboohr.com/*
+// @match        https://*.bamboohr.com/employees/timesheet/?id=*
 // @grant        GM.getValue
 // @grant        GM.setValue
 // @homepageURL  https://github.com/skgsergio/bamboohr-timesheet-greasemonkey/
@@ -33,10 +33,13 @@ const DEFAULT_TEMPLATES = {
   }
 
   for (const template of Object.keys(TEMPLATES)) {
-    let link = document.createElement('li');
-    link.innerHTML = `<a href="#" data-template="${template}">Fill Timesheet: ${template}</a>`;
+    let btn = document.createElement('button');
+    btn.type = 'button';
+    btn.classList.value = 'btn btnLarge btnAction TimesheetSummary__clockButton';
+    btn.innerText = `Fill Day: ${template}`;
+    btn.dataset.template = template;
 
-    link.querySelector('a').onclick = function () {
+    btn.onclick = function () {
       let now = new Date();
       // Do JS have propper date formatting? :facepalm:
       let date = prompt("Please enter the date", `${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + now.getDate()).slice(-2)}`);
@@ -84,6 +87,6 @@ const DEFAULT_TEMPLATES = {
       return false;
     };
 
-    document.querySelector('ul#nav-tabs').append(link);
+    document.querySelector('.TimesheetSummary').prepend(btn);
   }
 })();
