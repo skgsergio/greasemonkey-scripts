@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill
 // @namespace    bamboohr.sconde.net
-// @version      0.4
+// @version      0.5
 // @description  Fill BambooHR Timesheet with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/*
@@ -84,6 +84,6 @@ const DEFAULT_TEMPLATES = {
       return false;
     };
 
-    window.document.querySelector('ul#nav-tabs').append(link);
+    document.querySelector('ul#nav-tabs').append(link);
   }
 })();
