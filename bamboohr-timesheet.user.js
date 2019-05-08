@@ -32,7 +32,7 @@ const DEFAULT_TEMPLATES = {
     GM.setValue('TEMPLATES', TEMPLATES);
   }
 
-  for (const template of Object.keys(TEMPLATES)) {
+  for (const template of Object.keys(TEMPLATES).reverse()) {
     let btn = document.createElement('button');
     btn.type = 'button';
     btn.classList.value = 'btn btnLarge btnAction TimesheetSummary__clockButton';
