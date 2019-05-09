@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Day
-// @namespace    bamboohr.sconde.net
-// @version      0.8
+// @namespace    day.timesheet.bamboohr.sconde.net
+// @version      0.9
 // @description  Fill BambooHR Timesheet day with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/employees/timesheet/?id=*
