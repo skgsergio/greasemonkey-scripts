@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Month
 // @namespace    bamboohr.sconde.net
-// @version      0.3
+// @version      0.4
 // @description  Fill BambooHR Timesheet month with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/employees/timesheet/?id=*
@@ -20,9 +20,11 @@
    Load BambooHR for the first time with the script and then open this script Storage preferences and edit there.
  */
 const DEFAULT_TEMPLATES = {
-  'default': [{ start: '8:30', end: '13:00' }, { start: '13:30', end: '17:00' }],
-  'Fri': [{ start: '8:30', end: '14:30' }, { start: '15:30', end: '17:30' }]
+  'default': [{ start: '8:15', end: '13:00' }, { start: '13:30', end: '16:45' }],
+  'Fri': [{ start: '8:15', end: '14:30' }, { start: '15:30', end: '17:15' }]
 };
+
+const DEFAULT_ENTROPY_MINUTES = 10;
 
 /* Here be dragons */
 (async function() {
@@ -31,6 +33,13 @@ const DEFAULT_TEMPLATES = {
   if (!TEMPLATES) {
     TEMPLATES = DEFAULT_TEMPLATES;
     GM.setValue('TEMPLATES', TEMPLATES);
+  }
+
+  let ENTROPY_MINUTES = await GM.getValue('ENTROPY_MINUTES');
+
+  if (!ENTROPY_MINUTES) {
+    ENTROPY_MINUTES = DEFAULT_ENTROPY_MINUTES;
+    GM.setValue('ENTROPY_MINUTES', ENTROPY_MINUTES);
   }
 
   let span = document.createElement('span');
@@ -47,21 +56,22 @@ const DEFAULT_TEMPLATES = {
     let work_days = document.querySelectorAll('.TimesheetSlat:not(.js-timesheet-showWeekends)');
     let skipped = [];
     let entries = [];
-    let idx = 0;
+    let tracking_id = 0;
 
     for (const day of work_days) {
       let dow = day.querySelector('.TimesheetSlat__day .TimesheetSlat__dayOfWeek').innerText;
       let dd = day.querySelector('.TimesheetSlat__day .TimesheetSlat__dayDate').innerText;
+      let formated_date = `${dow} ${dd} ${new Date().getFullYear()}`;
 
       // Vacations and Bank Holidays creates an extraInfoItem item, if present we skip the day.
       let extra_info = day.querySelector('.TimesheetSlat__data .TimesheetSlat__extraInfoItem');
       if (extra_info) {
-        skipped.push(`${dow} ${dd} ${new Date().getFullYear()}: ${extra_info.innerText}`);
+        skipped.push(`${formated_date}: ${extra_info.innerText}`);
         continue;
       }
 
       // Build the date in the format used by BambooHR Timesheet
-      let date = new Date(`${dow} ${dd} ${new Date().getFullYear()}`);
+      let date = new Date(formated_date);
       let date_str = `${date.getFullYear()}-${('0' + (date.getMonth() + 1)).slice(-2)}-${('0' + date.getDate()).slice(-2)}`;
 
       // Get the working time slots for the dow
@@ -71,16 +81,24 @@ const DEFAULT_TEMPLATES = {
       }
 
       // Generate the entries for this day
-      for (const slot of slots) {
-        idx += 1;
+      let minute_diff = [...Array(slots.length)].map(_ => Math.ceil(Math.random() * ENTROPY_MINUTES));
+
+      for (const [idx, slot] of slots.entries()) {
+        tracking_id += 1;
+
+        let start = new Date(`${formated_date} ${slot.start}`)
+        start.setMinutes(start.getMinutes() + minute_diff[idx])
+
+        let end = new Date(`${formated_date} ${slot.end}`)
+        end.setMinutes(end.getMinutes() + minute_diff[minute_diff.length - 1 - idx])
 
         entries.push({
           id: null,
-          trackingId: idx,
+          trackingId: tracking_id,
           employeeId: SESSION_USER.employeeId,
           date: date_str,
-          start: slot.start,
-          end: slot.end,
+          start: `${start.getHours()}:${('0' + start.getMinutes()).slice(-2)}`,
+          end: `${end.getHours()}:${('0' + end.getMinutes()).slice(-2)}`,
           note: ''
         });
       }

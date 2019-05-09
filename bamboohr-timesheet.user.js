@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Day
 // @namespace    bamboohr.sconde.net
-// @version      0.7
+// @version      0.8
 // @description  Fill BambooHR Timesheet day with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/employees/timesheet/?id=*
@@ -20,8 +20,8 @@
    Load BambooHR for the first time with the script and then open this script Storage preferences and edit there.
  */
 const DEFAULT_TEMPLATES = {
-  'Mon-Thu': [{ start: '8:30', end: '13:00' }, { start: '13:30', end: '17:00' }],
-  'Fri': [{ start: '8:30', end: '14:30' }, { start: '15:30', end: '17:30' }]
+  'default': [{ start: '8:15', end: '13:00' }, { start: '13:30', end: '16:45' }],
+  'Fri': [{ start: '8:15', end: '14:30' }, { start: '15:30', end: '17:15' }]
 };
 
 (async function() {
