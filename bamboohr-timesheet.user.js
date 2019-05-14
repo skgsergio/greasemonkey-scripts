@@ -46,8 +46,9 @@ const DEFAULT_TEMPLATES = {
 
     btn.onclick = function () {
       let now = new Date();
-      // Do JS have propper date formatting? :facepalm:
-      let date = prompt("Please enter the date", `${now.getFullYear()}-${('0' + (now.getMonth() + 1)).slice(-2)}-${('0' + now.getDate()).slice(-2)}`);
+      let options = {year: 'numeric', month: '2-digit', day: '2-digit'};
+      // Using korean locale because 'year. month. day. ' then replacing '. ' with '-'
+      let date = prompt("Please enter the date", now.toLocaleDateString('ko-KR', options).replace(/(\d{4})/g, '$1-$2-$3'));
 
       if (!date) {
         alert("Canceled!");
