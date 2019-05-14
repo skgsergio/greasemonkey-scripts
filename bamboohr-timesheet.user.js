@@ -48,7 +48,7 @@ const DEFAULT_TEMPLATES = {
       let now = new Date();
       let options = {year: 'numeric', month: '2-digit', day: '2-digit'};
       // Using korean locale because 'year. month. day. ' then replacing '. ' with '-'
-      let date = prompt("Please enter the date", now.toLocaleDateString('ko-KR', options).replace(/(\d{4})/g, '$1-$2-$3'));
+      let date = prompt("Please enter the date", now.toLocaleDateString('ko-KR', options).replace(/\. ?/g,'-').slice(0,-1));
 
       if (!date) {
         alert("Canceled!");
