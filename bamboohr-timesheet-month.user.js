@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Month
 // @namespace    month.timesheet.bamboohr.sconde.net
-// @version      0.5
+// @version      0.6
 // @description  Fill BambooHR Timesheet month with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/employees/timesheet/?id=*
@@ -76,8 +76,8 @@ const DEFAULT_ENTROPY_MINUTES = 10;
 
       // Get the working time slots for the dow
       let slots = TEMPLATES['default'];
-      if (TEMPLATES.hasOwnProperty(name)) {
-        slots = TEMPLATES[name];
+      if (TEMPLATES.hasOwnProperty(dow)) {
+        slots = TEMPLATES[dow];
       }
 
       // Generate the entries for this day
