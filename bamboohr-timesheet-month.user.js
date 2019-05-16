@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Month
 // @namespace    month.timesheet.bamboohr.sconde.net
-// @version      0.6
+// @version      0.7
 // @description  Fill BambooHR Timesheet month with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/employees/timesheet/?id=*
@@ -95,7 +95,7 @@ const DEFAULT_ENTROPY_MINUTES = 10;
         entries.push({
           id: null,
           trackingId: tracking_id,
-          employeeId: SESSION_USER.employeeId,
+          employeeId: unsafeWindow.SESSION_USER.employeeId,
           date: date_str,
           start: `${start.getHours()}:${('0' + start.getMinutes()).slice(-2)}`,
           end: `${end.getHours()}:${('0' + end.getMinutes()).slice(-2)}`,
@@ -111,10 +111,9 @@ const DEFAULT_ENTROPY_MINUTES = 10;
         mode: 'cors',
         cache: 'no-cache',
         credentials: 'same-origin',
-        referrer: 'client',
         headers: {
           'content-type': 'application/json; charset=UTF-8',
-          'x-csrf-token': CSRF_TOKEN
+          'x-csrf-token': unsafeWindow.CSRF_TOKEN
         },
         body: JSON.stringify({ entries: entries })
       }
