@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Month
 // @namespace    month.timesheet.bamboohr.sconde.net
-// @version      1.0
+// @version      1.1
 // @description  Fill BambooHR Timesheet month with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/employees/timesheet/*
@@ -42,12 +42,10 @@ const DEFAULT_ENTROPY_MINUTES = 10;
     GM.setValue('ENTROPY_MINUTES', ENTROPY_MINUTES);
   }
 
-  let span = document.createElement('span');
-  document.querySelector('.TimesheetSummary').prepend(span);
-
   /* Fill Month */
+  let span_fill = document.createElement('span');
   let btn_fill = document.createElement('button');
-  span.append(btn_fill);
+  span_fill.append(btn_fill);
 
   btn_fill.type = 'button';
   btn_fill.classList.value = 'btn btnLarge btnAction TimesheetSummary__clockButton';
@@ -131,8 +129,9 @@ const DEFAULT_ENTROPY_MINUTES = 10;
   }
 
   /* Delete Month */
+  let span_del = document.createElement('span');
   let btn_del = document.createElement('button');
-  span.append(btn_del);
+  span_del.append(btn_del);
 
   btn_del.type = 'button';
   btn_del.classList.value = 'btn btnLarge btnAction TimesheetSummary__clockButton';
@@ -172,4 +171,8 @@ const DEFAULT_ENTROPY_MINUTES = 10;
 
     return false;
   }
+
+  /* Add buttons */
+  document.querySelector('.TimesheetSummary').prepend(span_del);
+  document.querySelector('.TimesheetSummary').prepend(span_fill);
 })();
