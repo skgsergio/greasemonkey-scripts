@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Month
 // @namespace    month.timesheet.bamboohr.sconde.net
-// @version      0.9
+// @version      1.0
 // @description  Fill BambooHR Timesheet month with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/employees/timesheet/*
@@ -45,14 +45,15 @@ const DEFAULT_ENTROPY_MINUTES = 10;
   let span = document.createElement('span');
   document.querySelector('.TimesheetSummary').prepend(span);
 
-  let btn = document.createElement('button');
-  span.append(btn);
+  /* Fill Month */
+  let btn_fill = document.createElement('button');
+  span.append(btn_fill);
 
-  btn.type = 'button';
-  btn.classList.value = 'btn btnLarge btnAction TimesheetSummary__clockButton';
-  btn.innerText = 'Fill Month';
+  btn_fill.type = 'button';
+  btn_fill.classList.value = 'btn btnLarge btnAction TimesheetSummary__clockButton';
+  btn_fill.innerText = 'Fill Month';
 
-  btn.onclick = function () {
+  btn_fill.onclick = function () {
     let work_days = document.querySelectorAll('.TimesheetSlat:not(.js-timesheet-showWeekends):not(.TimesheetSlat--disabled)');
     let skipped = [];
     let entries = [];
@@ -120,6 +121,50 @@ const DEFAULT_ENTROPY_MINUTES = 10;
     ).then(data => {
       if (data.status == 200) {
         alert(`Created ${entries.length} entries.\n\nSkipped days:\n${skipped.join('\n')}`);
+        location.reload();
+      } else {
+        data.text().then(t => alert(`Request error!\nHTTP Code: ${data.status}\nResponse:\n${t}`));
+      }
+    }).catch(err => alert(`Fetch error!\n\n${err}`));
+
+    return false;
+  }
+
+  /* Delete Month */
+  let btn_del = document.createElement('button');
+  span.append(btn_del);
+
+  btn_del.type = 'button';
+  btn_del.classList.value = 'btn btnLarge btnAction TimesheetSummary__clockButton';
+  btn_del.innerText = 'Delete Month';
+
+  btn_del.onclick = function () {
+    let tsd = JSON.parse(document.getElementById('js-timesheet-data').innerHTML);
+    let entries = [];
+
+    for (const [day, details] of Object.entries(tsd.timesheet.dailyDetails)) {
+      for (const entry of details.clockEntries) {
+        entries.push(entry.id)
+      }
+    }
+
+    fetch(
+      `${window.location.origin}/timesheet/clock/entries`,
+      {
+        method: 'DELETE',
+        mode: 'cors',
+        cache: 'no-cache',
+        credentials: 'same-origin',
+        headers: {
+          'content-type': 'application/json; charset=UTF-8',
+          'x-csrf-token': unsafeWindow.CSRF_TOKEN
+        },
+        body: JSON.stringify({ entries: entries })
+      }
+    ).then(data => {
+      if (data.status == 200) {
+        alert(`Deleted ${entries.length} entries.`);
+        location.reload();
       } else {
         data.text().then(t => alert(`Request error!\nHTTP Code: ${data.status}\nResponse:\n${t}`));
       }
