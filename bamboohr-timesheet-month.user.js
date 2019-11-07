@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Month
 // @namespace    month.timesheet.bamboohr.sconde.net
-// @version      0.8
+// @version      0.9
 // @description  Fill BambooHR Timesheet month with templates
 // @author       Sergio Conde
-// @match        https://*.bamboohr.com/employees/timesheet/?id=*
+// @match        https://*.bamboohr.com/employees/timesheet/*
 // @grant        GM.getValue
 // @grant        GM.setValue
 // @homepageURL  https://github.com/skgsergio/bamboohr-timesheet-greasemonkey/
@@ -95,7 +95,7 @@ const DEFAULT_ENTROPY_MINUTES = 10;
         entries.push({
           id: null,
           trackingId: tracking_id,
-          employeeId: unsafeWindow.SESSION_USER.employeeId,
+          employeeId: unsafeWindow.currentlyEditingEmployeeId,
           date: date_str,
           start: `${start.getHours()}:${('0' + start.getMinutes()).slice(-2)}`,
           end: `${end.getHours()}:${('0' + end.getMinutes()).slice(-2)}`,
