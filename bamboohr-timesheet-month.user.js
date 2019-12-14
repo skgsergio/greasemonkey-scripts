@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Month
 // @namespace    month.timesheet.bamboohr.sconde.net
-// @version      1.1
+// @version      1.2
 // @description  Fill BambooHR Timesheet month with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/employees/timesheet/*
@@ -26,6 +26,9 @@ const DEFAULT_TEMPLATES = {
 
 const DEFAULT_ENTROPY_MINUTES = 10;
 
+const CONTAINER_CLASSLIST = 'TimesheetSummary__clockButtonWrapper';
+const BUTTON_CLASSLIST = 'fab-Button fab-Button--small fab-Button--width100';
+
 /* Here be dragons */
 (async function() {
   let TEMPLATES = await GM.getValue('TEMPLATES');
@@ -43,59 +46,66 @@ const DEFAULT_ENTROPY_MINUTES = 10;
   }
 
   /* Fill Month */
-  let span_fill = document.createElement('span');
+  let container_fill = document.createElement('div');
+  container_fill.classList.value = CONTAINER_CLASSLIST;
+
   let btn_fill = document.createElement('button');
-  span_fill.append(btn_fill);
+  container_fill.append(btn_fill);
 
   btn_fill.type = 'button';
-  btn_fill.classList.value = 'btn btnLarge btnAction TimesheetSummary__clockButton';
+  btn_fill.classList.value = BUTTON_CLASSLIST;
   btn_fill.innerText = 'Fill Month';
 
   btn_fill.onclick = function () {
-    let work_days = document.querySelectorAll('.TimesheetSlat:not(.js-timesheet-showWeekends):not(.TimesheetSlat--disabled)');
+    let tsd = JSON.parse(document.getElementById('js-timesheet-data').innerHTML);
     let skipped = [];
     let entries = [];
     let tracking_id = 0;
 
-    for (const day of work_days) {
-      let dow = day.querySelector('.TimesheetSlat__day .TimesheetSlat__dayOfWeek').innerText;
-      let dd = day.querySelector('.TimesheetSlat__day .TimesheetSlat__dayDate').innerText;
-      let formated_date = `${dow} ${dd} ${new Date().getFullYear()}`;
+    for (const [day, details] of Object.entries(tsd.timesheet.dailyDetails)) {
+      let date = new Date(day);
 
-      // Vacations and Bank Holidays creates an extraInfoItem item, if present we skip the day.
-      let extra_info = day.querySelector('.TimesheetSlat__data .TimesheetSlat__extraInfoItem');
-      if (extra_info) {
-        skipped.push(`${formated_date}: ${extra_info.innerText}`);
+      /* Skip weekend */
+      if ([0, 6].includes(date.getDay())) {
         continue;
       }
 
-      // Build the date in the format used by BambooHR Timesheet
-      let date = new Date(formated_date);
-      let date_str = `${date.getFullYear()}-${('0' + (date.getMonth() + 1)).slice(-2)}-${('0' + date.getDate()).slice(-2)}`;
+      /* Skip holidays & time off */
+      let skip_reasons = [];
 
-      // Get the working time slots for the dow
+      skip_reasons.push(...details.holidays.map(h => `${h.name.trim()} (${h.paidHours} hours)`));
+      skip_reasons.push(...details.timeOff.map(t => `${t.type.trim()} (${t.amount} ${t.unit})`));
+
+      if (skip_reasons.length > 0) {
+        skipped.push(`${day}: ${skip_reasons.join(", ")}`);
+        continue;
+      }
+
+      /* Get the working time slots for the dow */
+      let dow = date.toLocaleDateString("en-US", { weekday: 'short' });
       let slots = TEMPLATES['default'];
+
       if (TEMPLATES.hasOwnProperty(dow)) {
         slots = TEMPLATES[dow];
       }
 
-      // Generate the entries for this day
+      /* Generate the entries for this day */
       let minute_diff = [...Array(slots.length)].map(_ => Math.ceil(Math.random() * ENTROPY_MINUTES));
 
       for (const [idx, slot] of slots.entries()) {
         tracking_id += 1;
 
-        let start = new Date(`${formated_date} ${slot.start}`)
+        let start = new Date(`${day} ${slot.start}`)
         start.setMinutes(start.getMinutes() + minute_diff[idx])
 
-        let end = new Date(`${formated_date} ${slot.end}`)
+        let end = new Date(`${day} ${slot.end}`)
         end.setMinutes(end.getMinutes() + minute_diff[minute_diff.length - 1 - idx])
 
         entries.push({
           id: null,
           trackingId: tracking_id,
           employeeId: unsafeWindow.currentlyEditingEmployeeId,
-          date: date_str,
+          date: day,
           start: `${start.getHours()}:${('0' + start.getMinutes()).slice(-2)}`,
           end: `${end.getHours()}:${('0' + end.getMinutes()).slice(-2)}`,
           note: ''
@@ -129,18 +139,21 @@ const DEFAULT_ENTROPY_MINUTES = 10;
   }
 
   /* Delete Month */
-  let span_del = document.createElement('span');
+  let container_del = document.createElement('div');
+  container_del.classList.value = CONTAINER_CLASSLIST;
+
   let btn_del = document.createElement('button');
-  span_del.append(btn_del);
+  container_del.append(btn_del);
 
   btn_del.type = 'button';
-  btn_del.classList.value = 'btn btnLarge btnAction TimesheetSummary__clockButton';
+  btn_del.classList.value = BUTTON_CLASSLIST;
   btn_del.innerText = 'Delete Month';
 
   btn_del.onclick = function () {
     let tsd = JSON.parse(document.getElementById('js-timesheet-data').innerHTML);
     let entries = [];
 
+    /* Grab all entries ids */
     for (const [day, details] of Object.entries(tsd.timesheet.dailyDetails)) {
       for (const entry of details.clockEntries) {
         entries.push(entry.id)
@@ -173,6 +186,6 @@ const DEFAULT_ENTROPY_MINUTES = 10;
   }
 
   /* Add buttons */
-  document.querySelector('.TimesheetSummary').prepend(span_del);
-  document.querySelector('.TimesheetSummary').prepend(span_fill);
+  document.querySelector('.TimesheetSummary').prepend(container_del);
+  document.querySelector('.TimesheetSummary').prepend(container_fill);
 })();
