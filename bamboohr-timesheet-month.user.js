@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name         BambooHR Timesheet Fill Month
 // @namespace    month.timesheet.bamboohr.sconde.net
-// @version      1.2
+// @version      1.3
 // @description  Fill BambooHR Timesheet month with templates
 // @author       Sergio Conde
 // @match        https://*.bamboohr.com/employees/timesheet/*
 // @grant        GM.getValue
 // @grant        GM.setValue
-// @homepageURL  https://github.com/skgsergio/bamboohr-timesheet-greasemonkey/
-// @supportURL   https://github.com/skgsergio/bamboohr-timesheet-greasemonkey/issues
-// @updateURL    https://raw.githubusercontent.com/skgsergio/bamboohr-timesheet-greasemonkey/master/bamboohr-timesheet-month.user.js
+// @homepageURL  https://github.com/skgsergio/greasemonkey-scripts/
+// @supportURL   https://github.com/skgsergio/greasemonkey-scripts/issues
+// @updateURL    https://raw.githubusercontent.com/skgsergio/greasemonkey-scripts/master/bamboohr-timesheet-month.user.js
 // ==/UserScript==
 
 'use strict';
