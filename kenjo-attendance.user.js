@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kenjo Attendance Fill Month
 // @namespace    attendance.kenjo.sconde.net
-// @version      1.0
+// @version      1.1
 // @description  Fill Kenjo Attendance month with templates
 // @author       Sergio Conde
 // @match        https://app.kenjo.io/*
@@ -54,50 +54,33 @@ function USERWORK_URL(userId) {
 
 /* Fetch function */
 
-function fetchUrl(auth, url, method = 'GET', payload = null) {
-  let headers = {
-    'Content-Type': 'application/json'
-  }
+async function fetchUrl(auth, url, method = 'GET', body = null) {
+  const headers = { 'Content-Type': 'application/json' }
 
   if (auth) {
     headers.Authorization = auth;
   }
 
-  return new Promise((resolve, reject) => {
-    fetch(
-      url,
-      {
-        method: method,
-        credentials: 'include',
-        headers: headers,
-        body: payload
-      }
-    ).then(response => {
-      if (!response.ok) {
-        throw Error(`HTTP Code: ${response.status}`);
-      }
-      return response.json();
-    }).then(data => {
-      resolve(data);
-    }).catch(err => {
-      reject(`Failed performing request, reload the site and try again.\n\n${method} ${url}\n${err}`);
-    });
-  });
+  try {
+    const response = await fetch(url, { method, credentials: 'include', headers, body })
+
+    if (!response.ok) {
+      throw Error(`HTTP Code: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (err) {
+    throw new Error(`Failed performing request, reload the site and try again.\n\n${method} ${url}\n${err}`);
+  }
 }
 
 
 /* AUTH */
 
-function getAuth() {
-  return new Promise((resolve, reject) => {
-    fetchUrl(null, AUTH_COOKIE_URL).then(data => {
-      resolve(`${data.token_type} ${data.access_token}`);
-    }).catch(err => {
-      reject(err);
-    });
-  });
+async function getAuth() {
+  const data = await fetchUrl(null, AUTH_COOKIE_URL);
+  return `${data.token_type} ${data.access_token}`;
 }
-
 
 /* GET */
 
@@ -187,26 +170,26 @@ var ENTROPY_MINUTES = 0;
 
 async function fillMonth(statusContainer) {
   try {
-    let monthStart = startOfMonth(new Date());
-    let monthEnd = endOfMonth(new Date());
+    const monthStart = startOfMonth(new Date());
+    const monthEnd = endOfMonth(new Date());
 
     /* Get user info */
     statusContainer.innerText = "Getting user info...";
-    let auth = await getAuth();
-    let user = await getUser(auth);
+    const auth = await getAuth();
+    const user = await getUser(auth);
     statusContainer.innerText = "Getting user time off...";
-    let timeOff = await getUserTimeOff(auth, user.ownerId, monthStart.toISOString(), monthEnd.toISOString());
+    const timeOff = await getUserTimeOff(auth, user.ownerId, monthStart.toISOString(), monthEnd.toISOString());
 
     /* Get calendar info */
     statusContainer.innerText = "Getting user calendar...";
-    let userCalendar = await getUserCalendar(auth, user.ownerId);
-    let calendars = await getCalendar(auth, userCalendar.calendarId);
-    let templates = await getCalendarTemplates(auth);
-    let template = templates.filter(tpl => tpl.templateKey == calendars[0]._calendarTemplateKey)[0];
+    const userCalendar = await getUserCalendar(auth, user.ownerId);
+    const calendars = await getCalendar(auth, userCalendar.calendarId);
+    const templates = await getCalendarTemplates(auth);
+    const template = templates.filter(tpl => tpl.templateKey == calendars[0]._calendarTemplateKey)[0];
 
     /* Parse non working days */
     statusContainer.innerText = "Processing non working days...";
-    let nonWorkingDays = [];
+    const nonWorkingDays = [];
 
     timeOff.forEach((t) => {
       nonWorkingDays.push({
@@ -217,8 +200,8 @@ async function fillMonth(statusContainer) {
     });
 
     template.holidays.forEach((h) => {
-      let start = new Date(Date.parse(`${h.holidayDate}T00:00:00.000Z`));
-      let end = new Date(Date.parse(`${h.holidayDate}T23:59:59.999Z`));
+      const start = new Date(Date.parse(`${h.holidayDate}T00:00:00.000Z`));
+      const end = new Date(Date.parse(`${h.holidayDate}T23:59:59.999Z`));
 
       if (start >= monthStart && start <= monthEnd) {
         nonWorkingDays.push({
@@ -230,10 +213,10 @@ async function fillMonth(statusContainer) {
     });
 
     calendars[0]._customHolidays.forEach((h) => {
-      let holidayDate = h.holidayDate.split("T")[0];
+      const holidayDate = h.holidayDate.split("T")[0];
 
-      let start = new Date(Date.parse(`${holidayDate}T00:00:00.000Z`));
-      let end = new Date(Date.parse(`${holidayDate}T23:59:59.999Z`));
+      const start = new Date(Date.parse(`${holidayDate}T00:00:00.000Z`));
+      const end = new Date(Date.parse(`${holidayDate}T23:59:59.999Z`));
 
       if (start >= monthStart && start <= monthEnd) {
         nonWorkingDays.push({
@@ -246,8 +229,8 @@ async function fillMonth(statusContainer) {
 
     /* Generate month sheet */
     statusContainer.innerText = "Generating attendance sheet...";
-    let entries = [];
-    let skippedDays = [];
+    const entries = [];
+    const skippedDays = [];
 
     for (let day = monthStart; day <= monthEnd; day.setDate(day.getDate() + 1)) {
       /* Check if the day has an schedule */
@@ -256,18 +239,18 @@ async function fillMonth(statusContainer) {
       }
 
       /* Check if the day should be skipped (holiday or time off) */
-      let skipReasons = nonWorkingDays.filter((nwd) => day >= nwd.start && day <= nwd.end);
+      const skipReasons = nonWorkingDays.filter((nwd) => day >= nwd.start && day <= nwd.end);
 
       if (skipReasons.length > 0) {
-        skippedDays.push({ day: day, reasons: skipReasons.map(sr => sr.reason) });
+        skippedDays.push({ day: new Date(day.getTime()), reasons: skipReasons.map(sr => sr.reason) });
         continue;
       }
 
       /* Produce an entry for this day */
       SCHEDULE[day.getDay()].forEach((sch) => {
-        let start = hhmmToMinutes(sch.start) + Math.ceil(Math.random() * ENTROPY_MINUTES);
-        let pause = hhmmToMinutes(sch.pause);
-        let end = start + pause + hhmmToMinutes(sch.hours);
+        const start = hhmmToMinutes(sch.start) + Math.ceil(Math.random() * ENTROPY_MINUTES);
+        const pause = hhmmToMinutes(sch.pause);
+        const end = start + pause + hhmmToMinutes(sch.hours);
 
         entries.push({
           date: day.toISOString(),
@@ -279,7 +262,7 @@ async function fillMonth(statusContainer) {
     }
 
     /* Store sheet */
-    for (let [idx, ts] of entries.entries()) {
+    for (const [idx, ts] of entries.entries()) {
       statusContainer.innerText = `Saving day ${idx+1} of ${entries.length}...`;
       console.log(await addEntry(auth, user.ownerId, ts.date, ts.start, ts.end, ts.pause));
     }
@@ -288,7 +271,7 @@ async function fillMonth(statusContainer) {
     statusContainer.innerText = "Done";
 
     let skippedTxt = "";
-    skippedDays.forEach((s) => { skippedTxt += `\nDay ${s.day.getDate()}: ${s.reasons.join(', ')}` });
+    skippedDays.forEach((s) => { skippedTxt += `\n${s.day.toISOString().split("T")[0]}: ${s.reasons.join(', ')}` });
 
     alert(`Created ${entries.length} entries.\n\nSkipped days:${skippedTxt}`);
 
